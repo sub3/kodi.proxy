@@ -144,6 +144,41 @@ def install(addon_id):
 def _get_installed_addons():
     return [f for f in os.listdir(addons_dir) if os.path.exists(os.path.join(addons_dir, f, 'addon.xml'))]
 
+def list_addons(plugins_only=True):
+    rows = []
+    for addon_id in sorted(_get_installed_addons()):
+        addon_path = os.path.join(addons_dir, addon_id)
+        try:
+            root = ET.parse(os.path.join(addon_path, 'addon.xml')).getroot()
+        except Exception:
+            continue
+
+        points = [e.attrib.get('point', '') for e in root.findall('extension')]
+        is_plugin = 'xbmc.python.pluginsource' in points
+        if plugins_only and not is_plugin:
+            continue
+
+        # script.module.* are shared libraries (e.g. SlyGuy Common), not services
+        if plugins_only and addon_id.startswith('script.module.'):
+            continue
+
+        icon = ''
+        for elem in root.findall("./extension[@point='xbmc.addon.metadata']/assets/icon"):
+            icon = elem.text or ''
+        icon_path = os.path.join(addon_path, icon) if icon else os.path.join(addon_path, 'icon.png')
+
+        rows.append({
+            'id': addon_id,
+            'name': root.attrib.get('name', addon_id),
+            'version': root.attrib.get('version', ''),
+            'is_plugin': is_plugin,
+            'url': 'plugin://{}'.format(addon_id),
+            'icon': icon_path if os.path.exists(icon_path) else '',
+            'path': addon_path,
+        })
+
+    return rows
+
 def menu(url='', module='default'):
     cmds = ['install', 'uninstall', 'update', 'plugin']
 
@@ -948,7 +983,16 @@ xbmcvfs.delete = delete
 xbmcvfs.listdir = listdir
 
 if __name__ == "__main__":
-    try:
-        menu(get_argv(1, ''), get_argv(2, 'default'))
-    except ProxyException as e:
-        print(str(e))
+    if get_argv(1, '') == 'addons':
+        # list installed addons as JSON. Pass "all" to include modules/repos.
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except AttributeError:
+            pass
+        plugins_only = get_argv(2, '') != 'all'
+        print(json.dumps(list_addons(plugins_only=plugins_only), ensure_ascii=False, indent=2))
+    else:
+        try:
+            menu(get_argv(1, ''), get_argv(2, 'default'))
+        except ProxyException as e:
+            print(str(e))
