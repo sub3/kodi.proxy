@@ -668,6 +668,9 @@ def Dialog_select(self, heading, list, autoclose=0, preselect=-1, useDetails=Fal
 def Dialog_input(self, heading, defaultt="", type=0, option=0, autoclose=0):
     return get_input('{0} ({1}): '.format(heading, defaultt)).strip() or defaultt
 
+def Dialog_numeric(self, type, heading, defaultt="", bHiddenInput=False):
+    return get_input('{0} ({1}): '.format(heading, defaultt)).strip() or defaultt
+
 def DialogProgress_create(self, heading, line1="", line2="", line3=""):
     _print('{}\n{} {} {}'.format(heading, line1, line2, line3))
 
@@ -746,6 +749,7 @@ xbmcgui.Dialog.ok = Dialog_ok
 xbmcgui.Dialog.textviewer = Dialog_textviewer
 xbmcgui.Dialog.notification = Dialog_notification
 xbmcgui.Dialog.input = Dialog_input
+xbmcgui.Dialog.numeric = Dialog_numeric
 xbmcgui.DialogProgress.create = DialogProgress_create
 xbmcgui.DialogProgress.iscanceled = lambda self:False
 xbmcgui.Dialog.select = Dialog_select
