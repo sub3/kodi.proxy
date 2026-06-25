@@ -38,6 +38,7 @@ SETTINGS = {
     'interactive': None,
     'addons_url': 'https://slyguy.uk/.repo/addons.json.gz',
     'debug': 0,
+    'wv_platform': 'desktop',
 }
 
 config = configparser.RawConfigParser(defaults=SETTINGS)
@@ -465,6 +466,11 @@ def translatePath(path):
 
 def getCondVisibility(condition):
     log("Get visibility condition: {}".format(condition))
+    if not condition:
+        return False
+    plat = (SETTINGS.get('wv_platform') or 'desktop').lower()
+    if 'system.platform.android' in condition.lower():
+        return plat.startswith('android')
     return False
 
 def getLanguage(format):
